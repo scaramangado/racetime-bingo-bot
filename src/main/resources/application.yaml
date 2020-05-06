@@ -1,0 +1,12 @@
+racetime:
+  api:
+    base-url: http://localhost:8000
+    websocket-base: ws://localhost:8000
+  oauth: # Credentials for local dev environment
+    client-id: L4AAsykrfnxzBgUmPJ4lykVHSyo0IMbTpl7aXocK
+    client-secret: xvJiGVp7qRuHHE5p292Q33MBAodMFELyMzzcsvikt7zKz79lxVZOlDZ5yVNOnDoz4xbv7nWXiJ6llkiHT3ayL5mUmiZPVT61RL2KImM21TKTJnkS9xNSrF0kMJuQNmXj
+
+spring:
+  http:
+    converters:
+      preferred-json-mapper: gson

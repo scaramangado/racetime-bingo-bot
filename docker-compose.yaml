@@ -1,0 +1,9 @@
+version: '3.7'
+services:
+  bingobot:
+    build:
+      context: .
+    image: scaramangado/bingobot
+    volumes:
+      - /bingobot/volume:/etc/bingobot
+    restart: unless-stopped
