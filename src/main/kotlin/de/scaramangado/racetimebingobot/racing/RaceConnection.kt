@@ -27,7 +27,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   val gson = JsonConfiguration().gson()
 
   private enum class Mode(val version: String) {
-    JP("beta0.9.6.0-j"), EN("v9.5");
+    JP("beta0.9.6.1-j"), EN("v9.5.1");
   }
 
   init {
