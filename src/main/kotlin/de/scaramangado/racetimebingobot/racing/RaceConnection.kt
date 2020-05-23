@@ -62,7 +62,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   }
 
   private fun handleChatMessage(message: ChatMessage) {
-    when (message.messagePlain) {
+    when (message.messagePlain.toLowerCase()) {
       "!mode jp" -> {
         mode = Mode.JP
         session.sendChatMessage("New mode: JP")
@@ -86,8 +86,11 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
     raceStarted = true
 
-    session.setGoal("https://ootbingo.github.io/bingo/${mode.version}/bingo.html?seed=${generateSeed()}&mode=normal")
+    val goal = "https://ootbingo.github.io/bingo/${mode.version}/bingo.html?seed=${generateSeed()}&mode=normal"
+
+    session.setGoal(goal)
     session.sendChatMessage("Filename: ${generateFilename()}")
+    session.setGoal("Goal: $goal")
   }
 
   private fun generateSeed() = Random.nextInt(1,1_000_000)
