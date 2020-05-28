@@ -90,7 +90,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
     session.setGoal(goal)
     session.sendChatMessage("Filename: ${generateFilename()}")
-    session.setGoal("Goal: $goal")
+    session.sendChatMessage("Goal: $goal")
   }
 
   private fun generateSeed() = Random.nextInt(1,1_000_000)
