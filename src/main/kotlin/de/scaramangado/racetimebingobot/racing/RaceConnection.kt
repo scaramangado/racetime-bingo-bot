@@ -26,8 +26,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
   val gson = JsonConfiguration().gson()
 
-  private enum class Mode(val version: String) {
-    JP("beta0.9.6.1-j"), EN("v9.5.1");
+  private enum class Mode(val version: String, val mode: String = "normal") {
+    JP("beta0.9.6.1-j"), EN("v9.5.1"), BLACKOUT("v9.5.1", "blackout");
   }
 
   init {
@@ -57,7 +57,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   override fun afterConnectionEstablished(session: WebSocketSession) {
     this.session = session
     session.sendChatMessage("Welcome to OoT Bingo. I will generate a card and a filename at the start of the race.")
-    session.sendChatMessage("Commands: '!mode en', '!mode jp' and '!nobingo'")
+    session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout' and '!nobingo'")
     session.sendChatMessage("Current mode: EN")
   }
 
@@ -70,6 +70,10 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
       "!mode en" -> {
         mode = Mode.EN
         session.sendChatMessage("New mode: EN")
+      }
+      "!mode blackout" -> {
+        mode = Mode.BLACKOUT
+        session.sendChatMessage("New mode: BLACKOUT")
       }
       "!nobingo" -> {
         raceStarted = true
@@ -86,7 +90,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
     raceStarted = true
 
-    val goal = "https://ootbingo.github.io/bingo/${mode.version}/bingo.html?seed=${generateSeed()}&mode=normal"
+    val goal = "https://ootbingo.github.io/bingo/${mode.version}/bingo.html?seed=${generateSeed()}&mode=${mode.mode}"
 
     session.setGoal(goal)
     session.sendChatMessage("Filename: ${generateFilename()}")

@@ -31,6 +31,9 @@ out/
 ### VS Code ###
 .vscode/
 
+### Mac ###
+.DS_Store
+
 ### Project specific ###
 local_racetime/
 dockervolume/
