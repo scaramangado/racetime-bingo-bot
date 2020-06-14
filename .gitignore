@@ -37,3 +37,4 @@ out/
 ### Project specific ###
 local_racetime/
 dockervolume/
+application-test.yaml

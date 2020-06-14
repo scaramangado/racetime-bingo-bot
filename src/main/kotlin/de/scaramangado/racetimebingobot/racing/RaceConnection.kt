@@ -27,7 +27,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   val gson = JsonConfiguration().gson()
 
   private enum class Mode(val version: String, val mode: String = "normal") {
-    JP("beta0.9.6.1-j"), EN("v9.5.1"), BLACKOUT("v9.5.1", "blackout");
+    JP("beta0.9.6.1-j"), EN("v9.5.1"), BLACKOUT("v9.5.1", "blackout"),
+    BLM("v9.5.1", "blackout");
   }
 
   init {
@@ -62,24 +63,40 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   }
 
   private fun handleChatMessage(message: ChatMessage) {
-    when (message.messagePlain.toLowerCase()) {
-      "!mode jp" -> {
-        mode = Mode.JP
-        session.sendChatMessage("New mode: JP")
-      }
-      "!mode en" -> {
-        mode = Mode.EN
-        session.sendChatMessage("New mode: EN")
-      }
-      "!mode blackout" -> {
-        mode = Mode.BLACKOUT
-        session.sendChatMessage("New mode: BLACKOUT")
-      }
-      "!nobingo" -> {
-        raceStarted = true
-        session.sendChatMessage("No Board or filename will be generated! This action cannot be reverted.")
-      }
+
+    if (mode == Mode.BLM && (message.messagePlain.toLowerCase()
+            .startsWith("!mode") || message.messagePlain.toLowerCase() == "!nobingo")) {
+      session.sendChatMessage("Mode locked!")
+      return
     }
+
+      when (message.messagePlain.toLowerCase()) {
+        "!mode jp" -> {
+          mode = Mode.JP
+          session.sendChatMessage("New mode: JP")
+        }
+
+        "!mode en" -> {
+          mode = Mode.EN
+          session.sendChatMessage("New mode: EN")
+        }
+
+        "!mode blackout" -> {
+          mode = Mode.BLACKOUT
+          session.sendChatMessage("New mode: BLACKOUT")
+        }
+
+        "!mode blm" -> {
+          mode = Mode.BLM
+          session.sendChatMessage("New mode: BLM")
+          session.setGoal("Bingo Blackout #BlackLivesMatter")
+        }
+
+        "!nobingo" -> {
+          raceStarted = true
+          session.sendChatMessage("No Board or filename will be generated! This action cannot be reverted.")
+        }
+      }
   }
 
   private fun handleRaceEvent(race: Race) {
@@ -90,6 +107,18 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
     raceStarted = true
 
+    if (mode == Mode.BLM) {
+
+      val goal = "https://ootbingo.github.io/bingo/v9.5.1/bingo.html?mode=blackout&seed=327431"
+
+      session.setGoal("#BlackLivesMatter $goal")
+      session.sendChatMessage("Filename: ${generateFilename()}")
+      session.sendChatMessage("Goal: $goal")
+      session.sendChatMessage("Bingosync-Password: change")
+
+      return
+    }
+
     val goal = "https://ootbingo.github.io/bingo/${mode.version}/bingo.html?seed=${generateSeed()}&mode=${mode.mode}"
 
     session.setGoal(goal)
@@ -97,11 +126,11 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
     session.sendChatMessage("Goal: $goal")
   }
 
-  private fun generateSeed() = Random.nextInt(1,1_000_000)
+  private fun generateSeed() = Random.nextInt(1, 1_000_000)
 
   private fun generateFilename(): String {
 
-    val charPool : List<Char> = ('A'..'Z').toList()
+    val charPool: List<Char> = ('A'..'Z').toList()
 
     return (1..2)
         .map { Random.nextInt(0, charPool.size) }
