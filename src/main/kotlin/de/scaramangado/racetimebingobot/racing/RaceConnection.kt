@@ -27,7 +27,10 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   val gson = JsonConfiguration().gson()
 
   private enum class Mode(val version: String, val mode: String = "normal") {
-    JP("beta0.9.6.1-j"), EN("v9.5.1"), BLACKOUT("v9.5.1", "blackout");
+    JP("beta0.9.6.2-j"),
+    EN("v9.5.1"),
+    BLACKOUT("v9.5.1", "blackout"),
+    JP_SHORT("beta0.9.6.2-j", "short");
   }
 
   init {
@@ -57,7 +60,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   override fun afterConnectionEstablished(session: WebSocketSession) {
     this.session = session
     session.sendChatMessage("Welcome to OoT Bingo. I will generate a card and a filename at the start of the race.")
-    session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout' and '!nobingo'")
+    session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout', '!mode jpshort' and '!nobingo'")
     session.sendChatMessage("Current mode: EN")
   }
 
@@ -74,6 +77,10 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
       "!mode blackout" -> {
         mode = Mode.BLACKOUT
         session.sendChatMessage("New mode: BLACKOUT")
+      }
+      "!mode jpshort" -> {
+        mode = Mode.JP_SHORT
+        session.sendChatMessage("New mode: JP_SHORT")
       }
       "!nobingo" -> {
         raceStarted = true
