@@ -100,8 +100,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
     val goal = "https://ootbingo.github.io/bingo/${mode.version}/bingo.html?seed=${generateSeed()}&mode=${mode.mode}"
 
     session.setGoal(goal)
-    session.sendChatMessage("Filename: ${generateFilename()}")
-    session.sendChatMessage("Goal: $goal")
+    session.sendChatMessage("Filename: ${generateFilename()} @entrants")
+    session.sendChatMessage("Goal: $goal @entrants")
   }
 
   private fun generateSeed() = Random.nextInt(1,1_000_000)
