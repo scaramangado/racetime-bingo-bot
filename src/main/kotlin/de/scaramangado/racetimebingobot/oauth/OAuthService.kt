@@ -36,7 +36,7 @@ class OAuthService(private val apiProperties: ApiProperties,
         .let {
           restTemplateBuilder.build()
               .postForEntity("${apiProperties.baseUrl}/o/token",
-                             HttpEntity<String>(it.toFormData(), headers),
+                             HttpEntity(it.toFormData(), headers),
                              TokenResponse::class.java)
               .body
         }
@@ -61,6 +61,6 @@ class OAuthService(private val apiProperties: ApiProperties,
 
   private data class OAuthToken(val token: String, val expires: Instant) {
     val expired: Boolean
-      get() = Instant.now().let { it.isAfter(expires) || Duration.between(it, expires).toMinutes() < 5 }
+      get() = Instant.now().let { it.isAfter(expires) || Duration.between(it, expires).toHours() < 2 }
   }
 }
