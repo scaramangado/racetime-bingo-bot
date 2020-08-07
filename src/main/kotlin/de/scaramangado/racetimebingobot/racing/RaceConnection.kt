@@ -21,16 +21,16 @@ import kotlin.random.Random
 class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
   private var raceStarted: Boolean = false
-  private var mode = Mode.EN
+  private var mode = Mode.JP
   private lateinit var session: WebSocketSession
 
   val gson = JsonConfiguration().gson()
 
   private enum class Mode(val version: String, val mode: String = "normal") {
-    JP("beta0.9.6.3-j"),
+    JP("v10.0"),
     EN("v9.5.1"),
-    BLACKOUT("v9.5.1", "blackout"),
-    JP_SHORT("beta0.9.6.2-j", "short");
+    BLACKOUT("v10.0", "blackout"),
+    SHORT("v10.0", "short");
   }
 
   init {
@@ -60,8 +60,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   override fun afterConnectionEstablished(session: WebSocketSession) {
     this.session = session
     session.sendChatMessage("Welcome to OoT Bingo. I will generate a card and a filename at the start of the race.")
-    session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout', '!mode jpshort' and '!nobingo'")
-    session.sendChatMessage("Current mode: EN")
+    session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout', '!mode short' and '!nobingo'")
+    session.sendChatMessage("Current mode: JP")
   }
 
   private fun handleChatMessage(message: ChatMessage) {
@@ -78,9 +78,9 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
         mode = Mode.BLACKOUT
         session.sendChatMessage("New mode: BLACKOUT")
       }
-      "!mode jpshort" -> {
-        mode = Mode.JP_SHORT
-        session.sendChatMessage("New mode: JP_SHORT")
+      "!mode short" -> {
+        mode = Mode.SHORT
+        session.sendChatMessage("New mode: SHORT")
       }
       "!nobingo" -> {
         raceStarted = true
