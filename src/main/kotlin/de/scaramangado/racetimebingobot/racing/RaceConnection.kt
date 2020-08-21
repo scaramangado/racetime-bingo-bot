@@ -24,6 +24,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   private var mode = Mode.JP
   private lateinit var session: WebSocketSession
 
+  private val sessionId = UUID.randomUUID().toString()
+
   val gson = JsonConfiguration().gson()
 
   private enum class Mode(val version: String, val mode: String = "normal") {
@@ -45,6 +47,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
     val payload = message.payload
 
     if (payload !is String || payload.contains("\"error\"")) {
+      println("Unusable payload in session $sessionId: $payload")
       return
     }
 
@@ -62,6 +65,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
     session.sendChatMessage("Welcome to OoT Bingo. I will generate a card and a filename at the start of the race.")
     session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout', '!mode short' and '!nobingo'")
     session.sendChatMessage("Current mode: JP")
+    session.sendChatMessage("Debug code: $sessionId")
+    println("Opened connection $sessionId")
   }
 
   private fun handleChatMessage(message: ChatMessage) {
@@ -119,11 +124,12 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   //<editor-fold desc="Interface">
 
   override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
-    System.err.println(exception.message)
+    println("Error in session $sessionId")
+    exception.printStackTrace()
   }
 
   override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
-    println("connection closed")
+    println("connection $sessionId closed: $closeStatus")
   }
 
   override fun supportsPartialMessages(): Boolean {
