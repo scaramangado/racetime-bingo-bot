@@ -6,6 +6,7 @@ import de.scaramangado.racetimebingobot.api.JsonConfiguration
 import de.scaramangado.racetimebingobot.api.model.Race
 import de.scaramangado.racetimebingobot.api.model.RaceStatus
 import de.scaramangado.racetimebingobot.api.model.User
+import org.slf4j.LoggerFactory
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketHandler
@@ -14,19 +15,22 @@ import org.springframework.web.socket.WebSocketMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.client.standard.StandardWebSocketClient
 import java.net.URI
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import kotlin.random.Random
 
 class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
+  private val logger = LoggerFactory.getLogger(RaceConnection::class.java)
+
   private var raceStarted: Boolean = false
   private var mode = Mode.JP
   private lateinit var session: WebSocketSession
 
-  private val sessionId = UUID.randomUUID().toString()
-
-  val gson = JsonConfiguration().gson()
+  private val raceSlug: String
+  private val opened = Instant.now()
+  private val gson = JsonConfiguration().gson()
 
   private enum class Mode(val version: String, val mode: String = "normal") {
     JP("v10.0"),
@@ -40,6 +44,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
         .doHandshake(this,
                      WebSocketHttpHeaders().also { it.add("Authorization", "Bearer $token") },
                      URI.create(raceEndpoint))
+
+    raceSlug = raceEndpoint.split("/").last()
   }
 
   override fun handleMessage(session: WebSocketSession, message: WebSocketMessage<*>) {
@@ -47,7 +53,7 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
     val payload = message.payload
 
     if (payload !is String || payload.contains("\"error\"")) {
-      println("Unusable payload in session $sessionId: $payload")
+      logger.info("Unusable payload in session $raceSlug: $payload")
       return
     }
 
@@ -62,31 +68,38 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
   override fun afterConnectionEstablished(session: WebSocketSession) {
     this.session = session
+    logger.info("Opened connection $raceSlug")
     session.sendChatMessage("Welcome to OoT Bingo. I will generate a card and a filename at the start of the race.")
     session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout', '!mode short' and '!nobingo'")
     session.sendChatMessage("Current mode: JP")
-    session.sendChatMessage("Debug code: $sessionId")
-    println("Opened connection $sessionId")
   }
 
   private fun handleChatMessage(message: ChatMessage) {
+
+    logger.trace("Received massage in chat of race $raceSlug")
+    logger.trace(message.messagePlain)
+
     when (message.messagePlain.toLowerCase()) {
       "!mode jp" -> {
         mode = Mode.JP
         session.sendChatMessage("New mode: JP")
       }
+
       "!mode en" -> {
         mode = Mode.EN
         session.sendChatMessage("New mode: EN")
       }
+
       "!mode blackout" -> {
         mode = Mode.BLACKOUT
         session.sendChatMessage("New mode: BLACKOUT")
       }
+
       "!mode short" -> {
         mode = Mode.SHORT
         session.sendChatMessage("New mode: SHORT")
       }
+
       "!nobingo" -> {
         raceStarted = true
         session.sendChatMessage("No Board or filename will be generated! This action cannot be reverted.")
@@ -95,6 +108,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   }
 
   private fun handleRaceEvent(race: Race) {
+
+    logger.trace("New status of race $raceSlug: ${race.status.verboseValue}")
 
     if (raceStarted || race.status.value != RaceStatus.Status.IN_PROGRESS) {
       return
@@ -109,11 +124,11 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
     session.sendChatMessage("Goal: $goal @entrants")
   }
 
-  private fun generateSeed() = Random.nextInt(1,1_000_000)
+  private fun generateSeed() = Random.nextInt(1, 1_000_000)
 
   private fun generateFilename(): String {
 
-    val charPool : List<Char> = ('A'..'Z').toList()
+    val charPool: List<Char> = ('A'..'Z').toList()
 
     return (1..2)
         .map { Random.nextInt(0, charPool.size) }
@@ -124,12 +139,12 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
   //<editor-fold desc="Interface">
 
   override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
-    println("Error in session $sessionId")
-    exception.printStackTrace()
+    logger.error("Error in session $raceSlug", exception)
   }
 
   override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
-    println("connection $sessionId closed: $closeStatus")
+    logger.info("connection $raceSlug closed: $closeStatus")
+    logger.info("connection was open for ${Duration.between(opened, Instant.now())}")
   }
 
   override fun supportsPartialMessages(): Boolean {
@@ -158,6 +173,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
           "guid": "${UUID.randomUUID()}"
         }
       }"""))
+
+    logger.info("sent message in chat of race $raceSlug")
   }
 
   private fun WebSocketSession.setGoal(goal: String) {
@@ -167,6 +184,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
           "info": "$goal"
         }
       }""".trimIndent()))
+
+    logger.info("Updated goal of race $raceSlug")
   }
 }
 

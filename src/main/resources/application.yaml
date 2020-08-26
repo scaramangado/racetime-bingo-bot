@@ -10,3 +10,13 @@ spring:
   http:
     converters:
       preferred-json-mapper: gson
+
+logging:
+  level:
+    root: INFO
+    de:
+      scaramangado:
+        racetimebingobot:
+          racing: TRACE
+  file: bingobot.log
+    max-history: 15

@@ -38,3 +38,4 @@ out/
 local_racetime/
 dockervolume/
 application-test.yaml
+bingobot.log
