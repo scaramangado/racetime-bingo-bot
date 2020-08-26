@@ -19,4 +19,4 @@ logging:
         racetimebingobot:
           racing: TRACE
   file: bingobot.log
-    max-history: 15
+  file.max-history: 15
