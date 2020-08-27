@@ -20,12 +20,14 @@ import java.time.Instant
 import java.util.UUID
 import kotlin.random.Random
 
-class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
+class RaceConnection(private val raceEndpoint: String, private val token: String) : WebSocketHandler {
 
   private val logger = LoggerFactory.getLogger(RaceConnection::class.java)
 
   private var raceStarted: Boolean = false
   private var mode = Mode.JP
+  private var firstConnect = true
+  private var connectionErrorCount = 0
   private lateinit var session: WebSocketSession
 
   private val raceSlug: String
@@ -68,10 +70,18 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
   override fun afterConnectionEstablished(session: WebSocketSession) {
     this.session = session
-    logger.info("Opened connection $raceSlug")
-    session.sendChatMessage("Welcome to OoT Bingo. I will generate a card and a filename at the start of the race.")
-    session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout', '!mode short' and '!nobingo'")
-    session.sendChatMessage("Current mode: JP")
+
+    if (firstConnect) {
+      logger.info("Opened connection $raceSlug")
+      session.sendChatMessage("Welcome to OoT Bingo. I will generate a card and a filename at the start of the race.")
+      session.sendChatMessage("Commands: '!mode en', '!mode jp', '!mode blackout', '!mode short' and '!nobingo'")
+      session.sendChatMessage("Current mode: JP")
+    } else {
+      logger.info("Successfully reconnected to race $raceSlug")
+    }
+
+    firstConnect = false
+    connectionErrorCount = 0
   }
 
   private fun handleChatMessage(message: ChatMessage) {
@@ -122,6 +132,8 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
     session.setGoal(goal)
     session.sendChatMessage("Filename: ${generateFilename()} @entrants")
     session.sendChatMessage("Goal: $goal @entrants")
+
+    session.close(CloseStatus.NORMAL)
   }
 
   private fun generateSeed() = Random.nextInt(1, 1_000_000)
@@ -140,11 +152,20 @@ class RaceConnection(raceEndpoint: String, token: String) : WebSocketHandler {
 
   override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
     logger.error("Error in session $raceSlug", exception)
+    connectionErrorCount++
   }
 
   override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
-    logger.info("connection $raceSlug closed: $closeStatus")
-    logger.info("connection was open for ${Duration.between(opened, Instant.now())}")
+    logger.info("connection $raceSlug closed after ${Duration.between(opened, Instant.now())}; $closeStatus")
+    connectionErrorCount++
+
+    if (connectionErrorCount < 10 && !raceStarted && closeStatus.code != 1000) {
+      logger.info("Attempting reconnect...")
+      StandardWebSocketClient()
+          .doHandshake(this,
+                       WebSocketHttpHeaders().also { it.add("Authorization", "Bearer $token") },
+                       URI.create(raceEndpoint))
+    }
   }
 
   override fun supportsPartialMessages(): Boolean {

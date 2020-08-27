@@ -17,6 +17,6 @@ logging:
     de:
       scaramangado:
         racetimebingobot:
-          racing: TRACE
+          racing: INFO
   file: bingobot.log
   file.max-history: 15
