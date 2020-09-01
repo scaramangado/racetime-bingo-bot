@@ -121,6 +121,12 @@ class RaceConnection(private val raceEndpoint: String, private val token: String
 
     logger.trace("New status of race $raceSlug: ${race.status.verboseValue}")
 
+    if (race.status.value == RaceStatus.Status.CANCELLED) {
+      logger.info("Race $raceSlug cancelled")
+      session.close(CloseStatus.NORMAL)
+      return
+    }
+
     if (raceStarted || race.status.value != RaceStatus.Status.IN_PROGRESS) {
       return
     }
