@@ -35,10 +35,10 @@ class RaceConnection(private val raceEndpoint: String, private val token: String
   private val gson = JsonConfiguration().gson()
 
   private enum class Mode(val version: String, val mode: String = "normal") {
-    JP("v10.0"),
+    JP("v10.1"),
     EN("v9.5.1"),
-    BLACKOUT("v10.0", "blackout"),
-    SHORT("v10.0", "short");
+    BLACKOUT("v10.1", "blackout"),
+    SHORT("v10.1", "short");
   }
 
   init {
