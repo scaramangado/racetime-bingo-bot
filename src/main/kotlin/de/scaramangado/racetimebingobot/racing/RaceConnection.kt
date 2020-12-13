@@ -18,6 +18,7 @@ import java.net.URI
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import kotlin.concurrent.thread
 import kotlin.random.Random
 
 class RaceConnection(private val raceEndpoint: String, private val token: String) : WebSocketHandler {
@@ -139,7 +140,10 @@ class RaceConnection(private val raceEndpoint: String, private val token: String
     session.sendChatMessage("Filename: ${generateFilename()} @entrants")
     session.sendChatMessage("Goal: $goal @entrants")
 
-    session.close(CloseStatus.NORMAL)
+    thread {
+      Thread.sleep(20000)
+      session.close(CloseStatus.NORMAL)
+    }
   }
 
   private fun generateSeed() = Random.nextInt(1, 1_000_000)

@@ -39,3 +39,4 @@ local_racetime/
 dockervolume/
 application-test.yaml
 bingobot.log
+src/main/resources/application-prod.yaml
